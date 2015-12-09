@@ -17,7 +17,6 @@
   <script src="https://cdn.firebase.com/libs/reactfire/0.5.1/reactfire.min.js"></script>
 </head>
 <body>
-  Test
   <div id="content">
   </div>
   <script type="text/jsx">
@@ -25,14 +24,43 @@
     var LoggedInApp = React.createClass({
      mixins: [ReactFireMixin],
      render: function() { 
-      return <div>Welcome {this.props.username}</div>;
+      var content;
+      if(this.hasCurrentGame()){ 
+        content = <div>Playing Game - {this.currentGame()}</div>
+      } else { 
+        content = <div>
+          Enter game id<input ref="gameIdInput" /><button onClick={this.setGameId}>Set</button>
+          </div>
+      }
+      return <div>
+        <div>Welcome {this.props.username}</div>
+        {content}
+        </div>
+     },
+     setGameId: function() { 
+      this.firebaseRefs.user.child('gameId').set(this.refs.gameIdInput.value);
+     },
+     componentWillMount: function() { 
+     var userRef = new Firebase("https://boiling-inferno-273.firebaseio.com/user/"+this.props.username);
+     this.bindAsObject(userRef, "user");
+     }, 
+     hasCurrentGame: function() { 
+      return !!this.state.user.gameId;
+     },
+     currentGame: function() { 
+      var gameId;
+      if(gameId = this.state.user.gameId) { 
+        return gameId
+      } else { 
+        return "No game";
+      }
      }
    });
     var PlanningPokerApp = React.createClass({
      mixins: [ReactFireMixin],
      render: function() {
       var username = "";
-      if(this.state.user) { 
+      if(this.state && this.state.user) { 
         username = this.state.user.name
         return <LoggedInApp username={username}></LoggedInApp>;
       } else { 
@@ -52,8 +80,6 @@
       if(storedUsername) { 
         this.setUser(storedUsername);
       }
-     var ref = new Firebase("https://boiling-inferno-273.firebaseio.com/items");
-     this.bindAsArray(ref, "items");
    },
    onSetUser: function() { 
     this.setUser(this.state.inputUserName);
@@ -61,20 +87,12 @@
    setUser: function(username) { 
      var userRef = new Firebase("https://boiling-inferno-273.firebaseio.com/user/"+username);
      this.bindAsObject(userRef, "user");
-     this.firebaseRefs.user.set({
-      name:username 
-     });
+     this.firebaseRefs.user.child('name').set(username);
      localStorage.setItem("username", username);
    },
-   buttonClick: function() { 
-    this.firebaseRefs.items.push("derp");
-    this.firebaseRefs.user.set({
-      name: 'hayden' + new Date()
-    });
-  }
 });
 
-    ReactDOM.render(<PlanningPokerApp name="John" />, mountNode);
+    ReactDOM.render(<PlanningPokerApp/>, mountNode);
   </script>
 </body>
 </html>

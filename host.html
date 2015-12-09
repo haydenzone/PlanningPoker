@@ -1,0 +1,55 @@
+<html>
+
+<head>
+    <!-- React JS -->
+    <script src="https://fb.me/react-0.14.3.js"></script>
+    <script src="https://fb.me/react-dom-0.14.3.js"></script>
+    <script src="https://fb.me/JSXTransformer-0.13.3.js"></script>
+    <!-- Firebase -->
+    <script src="https://cdn.firebase.com/js/client/2.3.2/firebase.js"></script>
+    <!-- ReactFire -->
+    <script src="https://cdn.firebase.com/libs/reactfire/0.5.1/reactfire.min.js"></script>
+    <script src="https://code.jquery.com/jquery-2.1.4.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore.js"></script>
+    <!-- Firebase -->
+    <script src="https://cdn.firebase.com/js/client/2.3.2/firebase.js"></script>
+    <!-- ReactFire -->
+    <script src="https://cdn.firebase.com/libs/reactfire/0.5.1/reactfire.min.js"></script>
+</head>
+
+<body>
+    <div id="content">
+    </div>
+    <script type="text/jsx">
+        var mountNode = $('#content')[0];
+        var HostApp = React.createClass({
+        	mixins: [ReactFireMixin],
+        	render: function() { 
+
+        		if(this.state && this.state.gameId) { 
+        			var players = _(this.state.players).map(function(player) { 
+        				return <div>{player.name}</div>;
+        			});
+        			return <div>
+        				<div>Gameid - {this.state.gameId}</div>
+        				{players}	
+        			</div>
+        		} else { 
+        			return <div>
+        				Enter Game Id <input ref="gameIdInput" />
+        				<button onClick={this.setGameId}>Set</button>
+        				</div>;
+        		}
+        	},
+        	setGameId: function() { 
+        		var gameId =this.refs.gameIdInput.value;
+        		this.setState({
+        			gameId: gameId
+        		});
+        		var playersRef = new Firebase("https://boiling-inferno-273.firebaseio.com/user/").orderByChild("gameId").equalTo(gameId);
+        		this.bindAsArray(playersRef, "players");
+        	}
+        });
+        ReactDOM.render(<HostApp/>, mountNode);
+    </script>
+</body>
