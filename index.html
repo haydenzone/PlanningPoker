@@ -22,28 +22,49 @@
   </div>
   <script type="text/jsx">
     var mountNode = $('#content')[0];
-    var HelloMessage = React.createClass({
+    var LoggedInApp = React.createClass({
+     mixins: [ReactFireMixin],
+     render: function() { 
+      return <div>Welcome {this.props.username}</div>;
+     }
+   });
+    var PlanningPokerApp = React.createClass({
      mixins: [ReactFireMixin],
      render: function() {
+      var username = "";
+      if(this.state.user) { 
+        username = this.state.user.name
+        return <LoggedInApp username={username}></LoggedInApp>;
+      } else { 
        return <div>
-       <div>{this.state.user.name}</div>
-           <button onClick={this.buttonClick}>Derp</button>
-           <div>THE NAME</div>
+       <input onChange={this.updateUserName} />
+       <button onClick={this.onSetUser}>Set user</button>
          </div>;
+      }
+   },
+   updateUserName: function(e) { 
+    this.setState({
+      inputUserName: e.target.value
+    });
    },
    componentWillMount: function() {
-     var userRef = new Firebase("https://boiling-inferno-273.firebaseio.com/user/hayden");
-     this.bindAsObject(userRef, "user");
+    var storedUsername = localStorage.getItem("username");
+      if(storedUsername) { 
+        this.setUser(storedUsername);
+      }
      var ref = new Firebase("https://boiling-inferno-273.firebaseio.com/items");
      this.bindAsArray(ref, "items");
    },
-   getInitialState: function() { 
-    return {
-      user: {
-        name: "Hayden"
-      }
-    };
-
+   onSetUser: function() { 
+    this.setUser(this.state.inputUserName);
+   },
+   setUser: function(username) { 
+     var userRef = new Firebase("https://boiling-inferno-273.firebaseio.com/user/"+username);
+     this.bindAsObject(userRef, "user");
+     this.firebaseRefs.user.set({
+      name:username 
+     });
+     localStorage.setItem("username", username);
    },
    buttonClick: function() { 
     this.firebaseRefs.items.push("derp");
@@ -53,7 +74,7 @@
   }
 });
 
-    ReactDOM.render(<HelloMessage name="John" />, mountNode);
+    ReactDOM.render(<PlanningPokerApp name="John" />, mountNode);
   </script>
 </body>
 </html>
