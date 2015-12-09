@@ -1,0 +1,98 @@
+<html>
+<head>
+<!-- React JS -->
+<script src="https://fb.me/react-0.14.3.js"></script>
+<script src="https://fb.me/react-dom-0.14.3.js"></script>
+ <script src="https://fb.me/JSXTransformer-0.13.3.js"></script>
+<!-- Firebase -->
+<script src="https://cdn.firebase.com/js/client/2.3.2/firebase.js"></script>
+<!-- ReactFire -->
+<script src="https://cdn.firebase.com/libs/reactfire/0.5.1/reactfire.min.js"></script>
+
+  <script src="https://code.jquery.com/jquery-2.1.4.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore.js"></script>
+  <!-- Firebase -->
+  <script src="https://cdn.firebase.com/js/client/2.3.2/firebase.js"></script>
+  <!-- ReactFire -->
+  <script src="https://cdn.firebase.com/libs/reactfire/0.5.1/reactfire.min.js"></script>
+</head>
+<body>
+  <div id="content">
+  </div>
+  <script type="text/jsx">
+    var mountNode = $('#content')[0];
+    var LoggedInApp = React.createClass({
+     mixins: [ReactFireMixin],
+     render: function() { 
+      var content;
+      if(this.hasCurrentGame()){ 
+        content = <div>Playing Game - {this.currentGame()}</div>
+      } else { 
+        content = <div>
+          Enter game id<input ref="gameIdInput" /><button onClick={this.setGameId}>Set</button>
+          </div>
+      }
+      return <div>
+        <div>Welcome {this.props.username}</div>
+        {content}
+        </div>
+     },
+     setGameId: function() { 
+      this.firebaseRefs.user.child('gameId').set(this.refs.gameIdInput.value);
+     },
+     componentWillMount: function() { 
+     var userRef = new Firebase("https://boiling-inferno-273.firebaseio.com/user/"+this.props.username);
+     this.bindAsObject(userRef, "user");
+     }, 
+     hasCurrentGame: function() { 
+      return !!this.state.user.gameId;
+     },
+     currentGame: function() { 
+      var gameId;
+      if(gameId = this.state.user.gameId) { 
+        return gameId
+      } else { 
+        return "No game";
+      }
+     }
+   });
+    var PlanningPokerApp = React.createClass({
+     mixins: [ReactFireMixin],
+     render: function() {
+      var username = "";
+      if(this.state && this.state.user) { 
+        username = this.state.user.name
+        return <LoggedInApp username={username}></LoggedInApp>;
+      } else { 
+       return <div>
+       <input onChange={this.updateUserName} />
+       <button onClick={this.onSetUser}>Set user</button>
+         </div>;
+      }
+   },
+   updateUserName: function(e) { 
+    this.setState({
+      inputUserName: e.target.value
+    });
+   },
+   componentWillMount: function() {
+    var storedUsername = localStorage.getItem("username");
+      if(storedUsername) { 
+        this.setUser(storedUsername);
+      }
+   },
+   onSetUser: function() { 
+    this.setUser(this.state.inputUserName);
+   },
+   setUser: function(username) { 
+     var userRef = new Firebase("https://boiling-inferno-273.firebaseio.com/user/"+username);
+     this.bindAsObject(userRef, "user");
+     this.firebaseRefs.user.child('name').set(username);
+     localStorage.setItem("username", username);
+   },
+});
+
+    ReactDOM.render(<PlanningPokerApp/>, mountNode);
+  </script>
+</body>
+</html>
