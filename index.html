@@ -3,40 +3,57 @@
 <!-- React JS -->
 <script src="https://fb.me/react-0.14.3.js"></script>
 <script src="https://fb.me/react-dom-0.14.3.js"></script>
-<script src="https://fb.me/JSXTransformer-0.13.3.js"></script>
-<script src="https://code.jquery.com/jquery-2.1.4.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore.js"></script>
+ <script src="https://fb.me/JSXTransformer-0.13.3.js"></script>
 <!-- Firebase -->
 <script src="https://cdn.firebase.com/js/client/2.3.2/firebase.js"></script>
 <!-- ReactFire -->
 <script src="https://cdn.firebase.com/libs/reactfire/0.5.1/reactfire.min.js"></script>
+
+  <script src="https://code.jquery.com/jquery-2.1.4.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore.js"></script>
+  <!-- Firebase -->
+  <script src="https://cdn.firebase.com/js/client/2.3.2/firebase.js"></script>
+  <!-- ReactFire -->
+  <script src="https://cdn.firebase.com/libs/reactfire/0.5.1/reactfire.min.js"></script>
 </head>
 <body>
-Test
-<div id="content">
-</div>
-<script type="text/jsx">
-var mountNode = $('#content')[0];
-var HelloMessage = React.createClass({
-	mixins: [ReactFireMixin],
-  render: function() {
-  	var elements = _(this.state.items).map(function(item, i) { 
-  		return (<div key={item.value+"-"+i}>{item[".value"]}</div>);
-  	});
-    return <div>Hello {this.props.name} {elements}
-    <button onClick={this.buttonClick}>Derp</button>
-    </div>;
-  },
-  componentWillMount: function() {
-	  var ref = new Firebase("https://boiling-inferno-273.firebaseio.com/");
-	  this.bindAsArray(ref, "items");
-	},
-	buttonClick: function() { 
-this.firebaseRefs.items.push("derp");
-	}
+  Test
+  <div id="content">
+  </div>
+  <script type="text/jsx">
+    var mountNode = $('#content')[0];
+    var HelloMessage = React.createClass({
+     mixins: [ReactFireMixin],
+     render: function() {
+       return <div>
+       <div>{this.state.user.name}</div>
+           <button onClick={this.buttonClick}>Derp</button>
+           <div>THE NAME</div>
+         </div>;
+   },
+   componentWillMount: function() {
+     var userRef = new Firebase("https://boiling-inferno-273.firebaseio.com/user/hayden");
+     this.bindAsObject(userRef, "user");
+     var ref = new Firebase("https://boiling-inferno-273.firebaseio.com/items");
+     this.bindAsArray(ref, "items");
+   },
+   getInitialState: function() { 
+    return {
+      user: {
+        name: "Hayden"
+      }
+    };
+
+   },
+   buttonClick: function() { 
+    this.firebaseRefs.items.push("derp");
+    this.firebaseRefs.user.set({
+      name: 'hayden' + new Date()
+    });
+  }
 });
 
-ReactDOM.render(<HelloMessage name="John" />, mountNode);
-</script>
+    ReactDOM.render(<HelloMessage name="John" />, mountNode);
+  </script>
 </body>
 </html>
