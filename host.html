@@ -15,11 +15,14 @@
     <script src="https://cdn.firebase.com/js/client/2.3.2/firebase.js"></script>
     <!-- ReactFire -->
     <script src="https://cdn.firebase.com/libs/reactfire/0.5.1/reactfire.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css"></script>
 </head>
 
 <body>
     <div id="content">
     </div>
+</div>
+
     <script type="text/jsx">
         var mountNode = $('#content')[0];
         var HostApp = React.createClass({
@@ -33,6 +36,17 @@
 	        				var vote = (player.vote)?player.vote:"No vote";
 	        				return <div>{player.name} - {player.vote}</div>;
 	        			});
+	        			results.push(<div><button onClick={this.clearVotes}>Clear Votes</button></div>);
+	        			results = results.concat(_(this.tallyVotes()).map(function(count, option) { 
+	        				var percent = 100*(count/this.state.players.length);
+	        				return <div>
+    						<div className="progress">
+ 							 <div className="progress-bar progress-bar-info" style={{width: percent+'%'}}>
+ 							 {option} - {count} votes
+ 							 </div>
+	        				</div>
+	        				</div>;
+	        			},this));
         			} else { 
         				results = <div>
         				Not everyone has voted
@@ -52,6 +66,35 @@
         				</div>;
         		}
         	},
+        	clearVotes: function() { 
+        		_(this.state.players).each(function(player) { 
+				     var userRef = new Firebase("https://boiling-inferno-273.firebaseio.com/user/"+player.name);
+				     userRef.child('vote').set('');
+        		},this);
+        	},
+        	tallyVotes: function() { 
+        		var options = {};
+        		_(this.fibSequenceTo(12)).map(function(num) { 
+        			options[""+num] = 0;
+        		});
+        		_(this.state.players).each(function(player) { 
+        			if(player.vote && player.vote != '') { 
+        				options[player.vote]++;
+        			}
+        		});
+        		return options;
+        	},
+		    fibSequenceTo: function(n) {
+		        var a = 0, b = 1, f = 1;
+		        var nums = [];
+		        for(var i = 2; i <= n; i++) {
+		            f = a + b;
+		            a = b;
+		            b = f;
+		            nums.push(f);
+		        }
+		        return nums;
+		    },
         	missingPlayers: function() { 
         		return _.chain(this.state.players)
         				.filter(function(player) { 
