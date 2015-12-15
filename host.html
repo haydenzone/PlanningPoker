@@ -27,12 +27,23 @@
         	render: function() { 
 
         		if(this.state && this.state.gameId) { 
-        			var players = _(this.state.players).map(function(player) { 
-        				return <div>{player.name}</div>;
-        			});
+        			var results;
+        			if(this.everyoneHasVoted()) { 
+	        			results = _(this.state.players).map(function(player) { 
+	        				var vote = (player.vote)?player.vote:"No vote";
+	        				return <div>{player.name} - {player.vote}</div>;
+	        			});
+        			} else { 
+        				results = <div>
+        				Not everyone has voted
+        				<div> Missing {this.missingPlayers()}</div>
+        				</div>;
+        			}
+
+
         			return <div>
         				<div>Gameid - {this.state.gameId}</div>
-        				{players}	
+        				{results}	
         			</div>
         		} else { 
         			return <div>
@@ -40,6 +51,24 @@
         				<button onClick={this.setGameId}>Set</button>
         				</div>;
         		}
+        	},
+        	missingPlayers: function() { 
+        		return _.chain(this.state.players)
+        				.filter(function(player) { 
+        					return !(player.vote && player.vote != '');
+        				})
+        				.map(function(player){ 
+        					return player.name;
+        				})
+        				.reduce(function(memo, player) { 
+        					return memo+player+',';	
+        				},"")
+        				.value();
+        	},
+        	everyoneHasVoted: function() { 
+        		return _(this.state.players).reduce(function(memo, player) { 
+        			return memo && player.vote && player.vote != '';
+        		},true);
         	},
         	setGameId: function() { 
         		var gameId =this.refs.gameIdInput.value;

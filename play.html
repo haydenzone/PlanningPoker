@@ -26,7 +26,21 @@
      render: function() { 
       var content;
       if(this.hasCurrentGame()){ 
-        content = <div>Playing Game - {this.currentGame()}</div>
+          var vote = _(this.fibSequenceTo(12)).map(function(n) { 
+            return <button data-val={n} key={n} onClick={this.setVote}>{n}</button>;
+          }.bind(this));
+          vote.push(<button data-val="" key="Clear" onClick={this.setVote}>Clear vote</button>);
+          var curVote = this.getVote();
+          if(curVote && curVote != ''){ 
+            currentVote = <div>Current Vote - {curVote}</div>;
+          } else { 
+            currentVote = <div>No Vote</div>;
+          }
+        content = <div>Playing Game - {this.currentGame()}
+          <button onClick={this.clearGame}>Leave Game</button>
+          {vote}
+          {currentVote}
+          </div>;
       } else { 
         content = <div>
           Enter game id<input ref="gameIdInput" /><button onClick={this.setGameId}>Set</button>
@@ -37,8 +51,18 @@
         {content}
         </div>
      },
+     setVote: function(e) { 
+      var vote = $(e.target).data('val');
+        this.firebaseRefs.user.child('vote').set(vote);
+     },
+     getVote:function() { 
+      return this.state.user.vote;
+     },
      setGameId: function() { 
       this.firebaseRefs.user.child('gameId').set(this.refs.gameIdInput.value);
+     },
+     clearGame: function() { 
+      this.firebaseRefs.user.child('gameId').set("");
      },
      componentWillMount: function() { 
      var userRef = new Firebase("https://boiling-inferno-273.firebaseio.com/user/"+this.props.username);
@@ -47,6 +71,17 @@
      hasCurrentGame: function() { 
       return !!this.state.user.gameId;
      },
+    fibSequenceTo: function(n) {
+        var a = 0, b = 1, f = 1;
+        var nums = [];
+        for(var i = 2; i <= n; i++) {
+            f = a + b;
+            a = b;
+            b = f;
+            nums.push(f);
+        }
+        return nums;
+    },
      currentGame: function() { 
       var gameId;
       if(gameId = this.state.user.gameId) { 
