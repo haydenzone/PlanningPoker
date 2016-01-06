@@ -24,6 +24,12 @@
 </div>
 
     <script type="text/jsx">
+    function getParameterByName(name) {
+    name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
+    var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
+        results = regex.exec(location.search);
+    return results === null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
+}
         var mountNode = $('#content')[0];
         var HostApp = React.createClass({
         	mixins: [ReactFireMixin],
@@ -34,9 +40,10 @@
         			if(this.everyoneHasVoted()) { 
 	        			results = _(this.state.players).map(function(player) { 
 	        				var vote = (player.vote)?player.vote:"No vote";
-	        				return <div>{player.name} - {player.vote}</div>;
+	        				return <div>
+	        				{player.name} - {player.vote}</div>;
 	        			});
-	        			results.push(<div><button onClick={this.clearVotes}>Clear Votes</button></div>);
+	        			results.push(this.clearVotesButton());
 	        			results = results.concat(_(this.tallyVotes()).map(function(count, option) { 
 	        				var percent = 100*(count/this.state.players.length);
 	        				return <div>
@@ -48,10 +55,13 @@
 	        				</div>;
 	        			},this));
         			} else { 
-        				results = <div>
+                        results = [];
+        				results.push(<div>
         				Not everyone has voted
-        				<div> Missing {this.missingPlayers()}</div>
-        				</div>;
+        				<div> Missing <ul>{this.missingPlayers()}</ul></div>
+        				</div>);
+                        results.push(this.clearVotesButton());
+
         			}
 
 
@@ -66,12 +76,15 @@
         				</div>;
         		}
         	},
+            clearVotesButton: function() { 
+                return <div><button onClick={this.clearVotes}>Clear Votes</button></div>;
+            },
         	clearVotes: function() { 
         		_(this.state.players).each(function(player) { 
 				     var userRef = new Firebase("https://boiling-inferno-273.firebaseio.com/user/"+player.name);
 				     userRef.child('vote').set('');
         		},this);
-        	},
+        	}	,
         	tallyVotes: function() { 
         		var options = {};
         		_(this.fibSequenceTo(12)).map(function(num) { 
@@ -101,25 +114,38 @@
         					return !(player.vote && player.vote != '');
         				})
         				.map(function(player){ 
-        					return player.name;
-        				})
-        				.reduce(function(memo, player) { 
-        					return memo+player+',';	
-        				},"")
+        					return <li>{player.name}<button key={player.name}	 data-val={player.name} onClick={this.bootPlayer}>Boot</button></li>;
+        				},this)
+        				.values()
         				.value();
+        	},
+        	bootPlayer: function(e) { 
+        		var name = $(e.currentTarget).data('val');
+				     var userRef = new Firebase("https://boiling-inferno-273.firebaseio.com/user/"+name);
+				     userRef.child('gameId').set('');
+
         	},
         	everyoneHasVoted: function() { 
         		return _(this.state.players).reduce(function(memo, player) { 
         			return memo && player.vote && player.vote != '';
         		},true);
         	},
+            componentDidMount: function() { 
+                var gameId;
+                if(gameId = getParameterByName('gameId')) { 
+                    this.loadGame(gameId);
+                }
+            },
+            loadGame: function(gameId) { 
+                var playersRef = new Firebase("https://boiling-inferno-273.firebaseio.com/user/").orderByChild("gameId").equalTo(gameId);
+                this.bindAsArray(playersRef, "players");
+                this.setState({
+                    gameId: gameId
+                });
+            },
         	setGameId: function() { 
         		var gameId =this.refs.gameIdInput.value;
-        		this.setState({
-        			gameId: gameId
-        		});
-        		var playersRef = new Firebase("https://boiling-inferno-273.firebaseio.com/user/").orderByChild("gameId").equalTo(gameId);
-        		this.bindAsArray(playersRef, "players");
+                this.loadGame(gameId);
         	}
         });
         ReactDOM.render(<HostApp/>, mountNode);

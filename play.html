@@ -21,6 +21,12 @@
   <div id="content">
   </div>
   <script type="text/jsx">
+    function getParameterByName(name) {
+    name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
+    var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
+        results = regex.exec(location.search);
+    return results === null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
+}
     var mountNode = $('#content')[0];
     var LoggedInApp = React.createClass({
      mixins: [ReactFireMixin],
@@ -60,7 +66,10 @@
       return this.state.user.vote;
      },
      setGameId: function() { 
-      this.firebaseRefs.user.child('gameId').set(this.refs.gameIdInput.value);
+      this.loadGame(this.refs.gameIdInput.value);
+     },
+     loadGame:function(gameId) { 
+      this.firebaseRefs.user.child('gameId').set(gameId);
      },
      clearGame: function() { 
       this.firebaseRefs.user.child('gameId').set("");
@@ -90,7 +99,13 @@
       } else { 
         return "No game";
       }
-     }
+     },
+            componentDidMount: function() { 
+                var gameId;
+                if(gameId = getParameterByName('joinGame')) { 
+                    this.loadGame(gameId);
+                }
+            },
    });
     var PlanningPokerApp = React.createClass({
      mixins: [ReactFireMixin],
@@ -113,6 +128,7 @@
    },
    componentWillMount: function() {
     var storedUsername = localStorage.getItem("username");
+
       if(storedUsername) { 
         this.setUser(storedUsername);
       }
