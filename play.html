@@ -25,6 +25,7 @@
       text-align:left;
     }
     </style>
+    <meta name="viewport" content="width=device-width">
 </head>
 <body>
   <div id="content">
@@ -55,7 +56,7 @@
           vote.push(<button data-val="" key="Clear" onClick={this.setVote}>Clear vote</button>);
         content = <div>
           {vote}
-          <div>Playing Game - {this.currentGame()}</div>
+          <div>Playing Game - {this.currentGame()}</div>  
           <button onClick={this.clearGame}>Leave Game</button>
           </div>;
       } else { 
