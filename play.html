@@ -15,8 +15,17 @@
   <script src="https://cdn.firebase.com/js/client/2.3.2/firebase.js"></script>
   <!-- ReactFire -->
   <script src="https://cdn.firebase.com/libs/reactfire/0.5.1/reactfire.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css"></script>
+    <style>
+    button.vote { 
+      display:block;
+      width:100%;
+      margin: 2px;
+      font-size: 50px;
+      text-align:left;
+    }
+    </style>
 </head>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css"></script>
 <body>
   <div id="content">
   </div>
@@ -33,20 +42,21 @@
      render: function() { 
       var content;
       if(this.hasCurrentGame()){ 
+          var curVote = this.getVote();
           var vote = _(this.fibSequenceTo(12)).map(function(n) { 
-            return <button data-val={n} key={n} onClick={this.setVote}>{n}</button>;
+            var classy = ""
+            if(n == curVote) { 
+              classy="btn-success"
+            } else { 
+              classy="btn-primary";
+            }
+            return <button className={"vote btn "+classy} data-val={n} key={n} onClick={this.setVote}>{n}</button>;
           }.bind(this));
           vote.push(<button data-val="" key="Clear" onClick={this.setVote}>Clear vote</button>);
-          var curVote = this.getVote();
-          if(curVote && curVote != ''){ 
-            currentVote = <div>Current Vote - {curVote}</div>;
-          } else { 
-            currentVote = <div>No Vote</div>;
-          }
-        content = <div>Playing Game - {this.currentGame()}
-          <button onClick={this.clearGame}>Leave Game</button>
+        content = <div>
           {vote}
-          {currentVote}
+          <div>Playing Game - {this.currentGame()}</div>
+          <button onClick={this.clearGame}>Leave Game</button>
           </div>;
       } else { 
         content = <div>
@@ -54,7 +64,6 @@
           </div>
       }
       return <div>
-        <div>Welcome {this.props.username}</div>
         {content}
         </div>
      },
@@ -111,15 +120,29 @@
      mixins: [ReactFireMixin],
      render: function() {
       var username = "";
+      var output = [];
       if(this.state && this.state.user) { 
-        username = this.state.user.name
-        return <LoggedInApp username={username}></LoggedInApp>;
+        username = this.state.user.name;
+}
+      output = [<nav className="navbar navbar-default">
+  <div className="container-fluid">
+    <div className="navbar-header">
+      <a className="navbar-brand" href="#">
+      <span className="glyphicon glyphicon-paperclip" aria-hidden="true"></span>
+      </a>
+        <span style={{float:"right"}}>{username}</span>
+    </div>
+  </div>
+</nav>];
+if(username != ""){
+        output.push(<LoggedInApp username={username}></LoggedInApp>);
       } else { 
-       return <div>
+       output.push(<div>
        <input onChange={this.updateUserName} />
        <button onClick={this.onSetUser}>Set user</button>
-         </div>;
+         </div>);
       }
+      return <div>{output}</div>;
    },
    updateUserName: function(e) { 
     this.setState({
